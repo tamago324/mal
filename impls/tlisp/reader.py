@@ -5,6 +5,11 @@ reader に関する処理
 import re
 from typing import List, Optional, Union
 
+
+class EndUnbalancedError(Exception):
+    """カッコの対応ができていないときのエラー"""
+
+
 tokens = [
     # 特殊な文字列 ~@
     r"~@",
@@ -92,19 +97,28 @@ def read_list(reader):
     #   ^
     reader.next()
 
-    # while not reader.isEnd() and reader.peek() != ")":
+    peeked = ""
     while not (reader.isEnd() or reader.peek() == ")"):
-        val = read_form(reader)
-        if val is not None:
-            result.append(val)
+        peeked = reader.peek()
+        atom = read_form(reader)
+        if atom is not None:
+            result.append(atom)
 
-    if reader.peek() == ")":
+    if reader.isEnd() and peeked != ")" or (not reader.isEnd() and reader.peek() != ")"):
+        # 最後の文字が ) ではない
+        raise EndUnbalancedError
+
+    if not reader.isEnd() and reader.peek() == ")":
         # 次回、上のwhileに入れるようにするため
         # (+ (+ 1 2) (+ 2 3))
         #          ^ ^
         reader.next()
+
     return result
 
 
 def read_atom(reader) -> str:
-    return reader.next()
+    atom = reader.next()
+
+    # TODO: 文字列に対応する
+    return atom

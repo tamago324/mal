@@ -1,5 +1,5 @@
 from printer import pr_str
-from reader import read_str
+from reader import read_str, EndUnbalancedError
 
 
 def READ(val: str) -> str:
@@ -19,5 +19,8 @@ def REP(val: str) -> str:
 
 
 while True:
-    line = input("user> ")
-    print(REP(line))
+    try:
+        line = input("user> ")
+        print(REP(line))
+    except EndUnbalancedError:
+        print('End of unbalanced')
