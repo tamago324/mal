@@ -3,12 +3,9 @@ reader に関する処理
 """
 
 import re
-from typing import List, Optional, Union
+from typing import List, Union
 
-
-class EndUnbalancedError(Exception):
-    """カッコの対応ができていないときのエラー"""
-
+from mal_types import Symbol
 
 tokens = [
     # 特殊な文字列 ~@
@@ -54,13 +51,13 @@ class Reader:
         現在の位置のトークンを返す
         チェックするためだけに使う (next() を読んでしまうと、位置を進めてしまうため)
         """
-        return self.tokens[self.pos]
+        if self.pos < len(self.tokens):
+            return self.tokens[self.pos]
+        else:
+            return None
 
-    def isEnd(self) -> bool:
-        return self.pos >= len(self.tokens)
 
-
-def read_str(val: str) -> str:
+def read_str(val: str):
     """
     文字列からトークンのリストを生成し、Reader を生成し、データを返す
     """
@@ -77,14 +74,9 @@ def tokenize(val: str) -> List[str]:
 
 # List[List[List[...]]] ってなるかもだから、どうしようか
 def read_form(reader: Reader):
-    """
-    (1 2) => ["1", "2"]
-    12 => "12"
-    (+ 1 (* 2 3)) => ["+", "1", ["*", "2", "3"]]
-    """
-    if reader.isEnd():
-        return None
-    if reader.peek() == "(":
+    token = reader.peek()
+    if token == "(":
+        reader.next()
         return read_list(reader)
     return read_atom(reader)
 
@@ -95,20 +87,21 @@ def read_list(reader):
     # ( の次のトークンに進める
     # ( + 1 2 )
     #   ^
-    reader.next()
-
     peeked = ""
-    while not (reader.isEnd() or reader.peek() == ")"):
+    while not (reader.peek() is None or reader.peek() == ")"):
         peeked = reader.peek()
         atom = read_form(reader)
-        if atom is not None:
-            result.append(atom)
+        result.append(atom)
 
-    if reader.isEnd() and peeked != ")" or (not reader.isEnd() and reader.peek() != ")"):
+    if (
+        reader.peek() is None
+        and peeked != ")"
+        or (reader.peek() is not None and reader.peek() != ")")
+    ):
         # 最後の文字が ) ではない
-        raise EndUnbalancedError
+        raise Exception("")
 
-    if not reader.isEnd() and reader.peek() == ")":
+    if reader.peek() is not None and reader.peek() == ")":
         # 次回、上のwhileに入れるようにするため
         # (+ (+ 1 2) (+ 2 3))
         #          ^ ^
@@ -117,8 +110,21 @@ def read_list(reader):
     return result
 
 
-def read_atom(reader) -> str:
-    atom = reader.next()
+def read_atom(reader):
+    token = reader.next()
 
-    # TODO: 文字列に対応する
-    return atom
+    if (match := re.match(r"^-?\d+$", token)):
+        # Number
+        return int(match.group())
+
+    elif token == "nil":
+        return None
+
+    elif token == "true":
+        return True
+
+    elif token == "false":
+        return False
+
+    # Symbol
+    return Symbol(token)
