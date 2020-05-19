@@ -1,4 +1,4 @@
-from mal_types import Symbol, symbol_Q, true_Q, false_Q, number_Q, list_Q, nil_Q
+from mal_types import Symbol, symbol_Q, true_Q, false_Q, number_Q, list_Q, nil_Q, function_Q
 
 
 def pr_str(val, print_readably: bool = True) -> str:
@@ -23,4 +23,6 @@ def pr_str(val, print_readably: bool = True) -> str:
         return "false"
     elif number_Q(val):
         return str(val)
+    elif function_Q(val):
+        return '#<function>'
     return val

@@ -27,3 +27,7 @@ def list_Q(val) -> bool:
 
 def number_Q(val) -> bool:
     return type(val) == int
+
+
+def function_Q(val) -> bool:
+    return callable(val)
