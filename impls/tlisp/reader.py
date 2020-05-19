@@ -113,7 +113,7 @@ def read_list(reader):
 def read_atom(reader):
     token = reader.next()
 
-    if (match := re.match(r"^-?\d+$", token)):
+    if (match := re.match(r"^-?\d+$", token)) :
         # Number
         return int(match.group())
 
