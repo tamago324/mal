@@ -5,6 +5,7 @@ from mal_types import Symbol, list_Q, symbol_Q
 from printer import pr_str
 from reader import read_str
 from env import Env
+import core
 
 
 def READ(val: str) -> str:
@@ -13,9 +14,9 @@ def READ(val: str) -> str:
 
 def eval_ast(ast, env: Env):
     if symbol_Q(ast):
-        if (fn := env.get(ast)):
-            return fn
-        raise Exception(f"'{ast}' not found")
+        if (symbol := env.get(ast)) is None:
+            raise Exception(f"'{ast}' not found")
+        return symbol
     elif list_Q(ast):
         return [EVAL(x, env) for x in ast]
     else:
@@ -27,8 +28,10 @@ def EVAL(ast, env: Env):
         return eval_ast(ast, env)
     if len(ast) == 0:
         return ast
+
     # special atom
     if ast[0] == 'def!':
+        # XXX: return いる？
         return env.set(ast[1], EVAL(ast[2], env))
 
     elif ast[0] == 'let*':
@@ -46,6 +49,23 @@ def EVAL(ast, env: Env):
         # 関数実行時に渡される実引数のリストと Symbol のリストとして、環境を作る
         return lambda *args: EVAL(ast[2], Env(env, ast[1], *args))
 
+    elif ast[0] == 'if':
+        res = EVAL(ast[1], env)
+        if not(res is None or res is False):
+            # 0 は True とする
+            return EVAL(ast[2], env)
+        else:
+            if len(ast) < 4:
+                # false だったときの値がなければ、nil を返す
+                return None
+            return EVAL(ast[3], env)
+
+    elif ast[0] == 'do':
+        # すべての引数を EVAL で評価して、最後の引数の評価結果を返す
+        # `(do (def! a 1) (def! a (+ a 20)))`
+        # => 21
+        return [EVAL(x, env) for x in ast[1:]][-1]
+
     else:
         # apply
         fn, *args = eval_ast(ast, env)
@@ -57,10 +77,8 @@ def PRINT(val: str) -> str:
 
 
 repl_env = Env()
-repl_env.set("+", lambda a, b: a + b)
-repl_env.set("-", lambda a, b: a - b)
-repl_env.set("*", lambda a, b: a * b)
-repl_env.set("/", lambda a, b: int(a / b))
+for symbol, func in core.ns.items():
+    repl_env.set(symbol, func)
 
 
 def REP(val: str) -> str:

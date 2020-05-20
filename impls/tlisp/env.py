@@ -25,16 +25,17 @@ class Env:
         return v
 
     def get(self, k: Symbol):
-        if (val := self.find(k)):
+        if (val := self.find(k)) is not None:
+            # 0 も False になってしまうため
             return val
-        raise Exception(f"'{k}' not found")
+        return None
 
     def find(self, k: Symbol):
         """
         現在の環境に key があれば、それを返す
         なければ outer_env から探し、返す
         """
-        if (val := self.env.get(k)):
+        if (val := self.env.get(k)) is not None:
             return val
         if self.outer_env is not None:
             return self.outer_env.find(k)
