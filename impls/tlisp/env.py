@@ -6,17 +6,20 @@ from mal_types import Symbol
 
 
 class Env:
-    def __init__(self, outer_env: Env = None, binds=[], *exprs):
+    def __init__(self, outer_env: Env = None, binds=None, *exprs):
         """
         binds:
             Symbol のリスト (仮引数のリスト)
         exprs:
             値のリスト (実引数のリスト)
         """
+
         self.env: Dict[Symbol, Any] = dict()
         self.outer_env = outer_env
 
         # 関数の引数の環境を追加
+        binds = binds if binds is not None else []
+
         for i, symbol in enumerate(binds):
             self.env[symbol] = exprs[i]
 
