@@ -1,19 +1,20 @@
 from mal_types import list_Q
 from printer import pr_str
+import operator as op
 
 
 ns = {
-    "+": lambda a, b: a + b,
-    "-": lambda a, b: a - b,
-    "*": lambda a, b: a * b,
-    "/": lambda a, b: int(a / b),
-    "%": lambda a, b: int(a % b),
+    "+": op.add,
+    "-": op.sub,
+    "*": op.mul,
+    "/": op.truediv,
+    "%": op.mod,
 
     # 各引数を要素にしたリストを返す
-    "list": lambda *args: list(args),
+    "list": list,
 
     # 第１引数がリストか
-    "list?": lambda lst: list_Q(lst),
+    "list?": list_Q,
 
     # リストが空か
     # nil はからのリストとする
@@ -24,11 +25,11 @@ ns = {
     "count": lambda lst: 0 if lst is None else len(lst),
 
     # 比較演算子
-    "=": lambda a, b: a == b,
-    "<": lambda a, b: a < b,
-    "<=": lambda a, b: a <= b,
-    ">": lambda a, b: a > b,
-    ">=": lambda a, b: a >= b,
+    "=": op.eq,
+    "<": op.lt,
+    "<=": op.le,
+    ">": op.gt,
+    ">=": op.ge,
 
     # TODO:
     "prn": pr_str,
