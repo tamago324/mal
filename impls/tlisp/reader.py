@@ -13,6 +13,7 @@ tokens = [
     # 特殊な1文字 []{}()'`~^@
     r"[\[\]{}()'`~^@]",
     # " から始まって、" で終わる (末尾の " がない場合、エラーとして報告する必要がある)
+    # string
     r'"(?:\\.|[^\\"])*"?',
     # ; で始まる文字列
     r";.*",
@@ -46,7 +47,7 @@ class Reader:
         self.pos += 1
         return result
 
-    def peek(self) -> Union[str, None]:
+    def peek(self):
         """
         現在の位置のトークンを返す
         チェックするためだけに使う (next() を読んでしまうと、位置を進めてしまうため)
@@ -64,7 +65,7 @@ def read_str(val: str):
     return read_form(Reader(tokenize(val)))
 
 
-def tokenize(val: str) -> List[str]:
+def tokenize(val: str):
     """
     val 内に含まれるトークンのリストを返す
     """
@@ -72,16 +73,17 @@ def tokenize(val: str) -> List[str]:
     return RE_TOKEN.findall(val)
 
 
-# List[List[List[...]]] ってなるかもだから、どうしようか
 def read_form(reader: Reader):
     token = reader.peek()
     if token == "(":
         reader.next()
         return read_list(reader)
+    elif re.match(r"^;.*", token):
+        # comment
+        return None
     return read_atom(reader)
 
 
-# List[List[List[...]]] ってなるかもだから、どうしようか
 def read_list(reader):
     result = []
     # ( の次のトークンに進める
@@ -113,7 +115,7 @@ def read_list(reader):
 def read_atom(reader):
     token = reader.next()
 
-    if (match := re.match(r"^-?\d+$", token)) :
+    if (match := re.match(r"^-?\d+$", token)):
         # Number
         return int(match.group())
 
@@ -125,6 +127,11 @@ def read_atom(reader):
 
     elif token == "false":
         return False
+
+    elif (match := re.match(r'"(?:\\.|[^\\"])*"', token)):
+        # 末尾の " がない場合、エラーにする
+        # string
+        return match.group()[1:-1]
 
     # Symbol
     return Symbol(token)
