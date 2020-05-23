@@ -1,4 +1,16 @@
-from mal_types import Symbol, symbol_Q, true_Q, false_Q, number_Q, list_Q, nil_Q, function_Q, malfunc_Q
+from mal_types import (
+    Symbol,
+    false_Q,
+    function_Q,
+    list_Q,
+    malfunc_Q,
+    nil_Q,
+    number_Q,
+    string_Q,
+    symbol_Q,
+    true_Q,
+    atom_Q,
+)
 
 
 def pr_str(val, print_readably: bool = True) -> str:
@@ -24,7 +36,26 @@ def pr_str(val, print_readably: bool = True) -> str:
     elif number_Q(val):
         return str(val)
     elif function_Q(val):
-        return '#<function>'
+        return "#<function>"
     elif malfunc_Q(val):
-        return '#<function>'
+        return "#<function>"
+    elif atom_Q(val):
+        return f"(atom {val.data})"
+    if print_readably:
+        # 改行 => \n
+        # "    => \"
+        # \    => \\
+        val = '"' + val.replace('\\', '\\\\').replace('"', '\\"').replace('\n', '\\n') + '"'
     return val
+
+
+def prn(*args):
+    print(" ".join([pr_str(x, True) for x in args]))
+    # nil
+    return None
+
+
+def println(*args):
+    print(" ".join([pr_str(x, False) for x in args]))
+    # nil
+    return None

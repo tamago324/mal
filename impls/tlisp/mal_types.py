@@ -11,6 +11,15 @@ class MalFunc:
         self.fn = fn
 
 
+class Atom:
+    def __init__(self, data) -> None:
+        self.data = data
+
+    def reset(self, data):
+        self.data = data
+        return data
+
+
 def nil_Q(val) -> bool:
     return val is None
 
@@ -41,3 +50,11 @@ def function_Q(val) -> bool:
 
 def malfunc_Q(val) -> bool:
     return isinstance(val, MalFunc)
+
+
+def string_Q(val) -> bool:
+    return type(val) == str
+
+
+def atom_Q(val) -> bool:
+    return isinstance(val, Atom)

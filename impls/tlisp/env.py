@@ -20,8 +20,17 @@ class Env:
         # 関数の引数の環境を追加
         binds = binds if binds is not None else []
 
+        # 可変長引数に対応
+        rest_idx = -1
         for i, symbol in enumerate(binds):
+            if symbol == "&":
+                rest_idx = i
+                break
             self.env[symbol] = exprs[i]
+
+        if rest_idx != -1:
+            # *exprs は tuple のため変換する
+            self.env[binds[rest_idx+1]] = list(exprs[rest_idx:])
 
     def set(self, k: Symbol, v) -> None:
         self.env[k] = v

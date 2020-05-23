@@ -128,10 +128,15 @@ def read_atom(reader):
     elif token == "false":
         return False
 
-    elif (match := re.match(r'"(?:\\.|[^\\"])*"', token)):
-        # 末尾の " がない場合、エラーにする
+    elif (match := re.match(r'"(?:\\.|[^\\"])*"?', token)):
+        # TODO: 末尾の " がない場合、エラーにする
         # string
-        return match.group()[1:-1]
+        s = match.group()[1:-1]
+        # \n => 改行
+        # \" => "
+        # \\ => \
+        # 順番大事
+        return s.replace("\\\\", "\\").replace('\\"', '"').replace("\\n", "\n")
 
     # Symbol
     return Symbol(token)

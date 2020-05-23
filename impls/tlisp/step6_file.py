@@ -91,15 +91,26 @@ def PRINT(val: str) -> str:
 repl_env = Env()
 for symbol, func in core.ns.items():
     repl_env.set(symbol, func)
+repl_env.set('eval', lambda ast: EVAL(ast, repl_env))
+
+# fn を適用してセット
+repl_env.set("swap!", lambda atom, fn, *args: atom.reset(EVAL([fn, atom.data, *args], repl_env)))
 
 
 def REP(val: str) -> str:
     return PRINT(EVAL(READ(val), repl_env))
 
 
+REP('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))')
+REP('(def! inc (fn* (x) (+ x 1)))')
+REP('(def! dec (fn* (x) (- x 1)))')
+
+
 while True:
     try:
         line = input("user> ")
+        if line is None:
+            continue
         print(REP(line))
     except Exception:
         print("".join(traceback.format_exception(*sys.exc_info())))
