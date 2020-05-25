@@ -8,6 +8,27 @@ from printer import pr_str
 from reader import read_str
 
 
+def is_pair(ast) -> bool:
+    """ 空ではないリストなら、True """
+    return True if list_Q(ast) and len(ast) > 0 else False
+
+
+def quasiquote(ast):
+    if not is_pair(ast):
+        # quote と同じように処理する
+        return [Symbol("quote"), ast]
+    elif ast[0] == "unquote":
+        return ast[1]
+    elif is_pair(ast[0]) and ast[0][0] == "splice-unquote":
+        # ast が ((splice-unquote lst) 1 2 3) の場合
+        # ast[0]    => (splice-unquote lst)
+        # ast[0][1] => lst
+        # ast[1:]   => (1 2 3)
+        return [Symbol("concat"), ast[0][1], quasiquote(ast[1:])]
+    else:
+        return [Symbol("cons"), quasiquote(ast[0]), quasiquote(ast[1:])]
+
+
 def READ(val: str) -> str:
     return read_str(val)
 
@@ -73,6 +94,13 @@ def EVAL(ast, env: Env):
             # 最後の評価は後で評価する
             # 末尾呼び出しのため
             ast = ast[-1]
+
+        elif ast[0] == "quote":
+            # データですよーって伝えられた ==> 評価せずに返す
+            return ast[1]
+
+        elif ast[0] == "quasiquote":
+            ast = quasiquote(ast[1])
 
         else:
             # apply

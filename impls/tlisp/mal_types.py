@@ -58,3 +58,10 @@ def string_Q(val) -> bool:
 
 def atom_Q(val) -> bool:
     return isinstance(val, Atom)
+
+
+def equals(a, b) -> bool:
+    """ symbol と str を区別するため"""
+    if symbol_Q(a) or symbol_Q(b):
+        return (type(a) == type(b)) and a == b
+    return a == b

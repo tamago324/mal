@@ -1,7 +1,8 @@
-from mal_types import list_Q, Atom, atom_Q
+from mal_types import list_Q, Atom, atom_Q, equals
 from printer import pr_str, prn, println
 import operator as op
 from reader import read_str
+from functools import reduce
 
 
 def read_file(fname) -> str:
@@ -30,11 +31,14 @@ ns = {
     # nil は空のリスト
     "count": lambda lst: 0 if lst is None else len(lst),
 
+    "cons": lambda x, lst: [x] + lst,
+    "concat": lambda *lists: reduce(op.add, lists) if len(lists) > 0 else [],
+
     "car": lambda lst: lst[0],
     "cdr": lambda lst: lst[1:],
 
     # 比較演算子
-    "=": op.eq,
+    "=": equals,
     "<": op.lt,
     "<=": op.le,
     ">": op.gt,
