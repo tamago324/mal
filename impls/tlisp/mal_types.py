@@ -4,11 +4,12 @@ class Symbol(str):
 
 class MalFunc:
     """ fn* で定義された関数 """
-    def __init__(self, ast, param, env, fn):
+    def __init__(self, ast, param, env, fn, is_macro=False):
         self.ast = ast
         self.param = param
         self.env = env
         self.fn = fn
+        self.is_macro = is_macro
 
 
 class Atom:

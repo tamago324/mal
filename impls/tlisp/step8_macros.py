@@ -3,7 +3,7 @@ import traceback
 
 import core
 from env import Env
-from mal_types import MalFunc, Symbol, list_Q, symbol_Q
+from mal_types import MalFunc, Symbol, list_Q, malfunc_Q, symbol_Q
 from printer import pr_str
 from reader import read_str
 
@@ -29,6 +29,23 @@ def quasiquote(ast):
         return [Symbol("cons"), quasiquote(ast[0]), quasiquote(ast[1:])]
 
 
+def is_macro_call(ast, env) -> bool:
+    return (
+        list_Q(ast)
+        and symbol_Q(ast[0])
+        and malfunc_Q(env.get(ast[0]))
+        and env.get(ast[0]).is_macro
+    )
+
+
+def macroexpand(ast, env):
+    while is_macro_call(ast, env):
+        macro = env.get(ast[0])
+        # 展開してあげないといけない
+        ast = macro.fn(*ast[1:])
+    return ast
+
+
 def READ(val: str) -> str:
     return read_str(val)
 
@@ -51,6 +68,11 @@ def EVAL(ast, env: Env):
             return eval_ast(ast, env)
         if len(ast) == 0:
             return ast
+
+        # 評価するときにマクロを実行し、書き換える
+        ast = macroexpand(ast, env)
+        if not list_Q(ast):
+            return eval_ast(ast, env)
 
         # special atom
         if ast[0] == "def!":
@@ -102,6 +124,22 @@ def EVAL(ast, env: Env):
         elif ast[0] == "quasiquote":
             ast = quasiquote(ast[1])
 
+        elif ast[0] == "defmacro!":
+            # (defmacro! one (fn* () 1))
+            #                     ^^ ^
+            fn = ast[2]
+            macro = MalFunc(
+                ast=fn[2],
+                param=fn[1],
+                env=env,
+                fn=lambda *args: EVAL(fn[2], Env(env, fn[1], *args)),
+                is_macro=True,
+            )
+            return env.set(ast[1], EVAL(macro, env))
+
+        elif ast[0] == "macroexpand":
+            return macroexpand(ast[1], env)
+
         else:
             # apply
             fn, *args = eval_ast(ast, env)
@@ -119,10 +157,12 @@ def PRINT(val: str) -> str:
 repl_env = Env()
 for symbol, func in core.ns.items():
     repl_env.set(symbol, func)
-repl_env.set('eval', lambda ast: EVAL(ast, repl_env))
+repl_env.set("eval", lambda ast: EVAL(ast, repl_env))
 
 # fn を適用してセット
-repl_env.set("swap!", lambda atom, fn, *args: atom.reset(EVAL([fn, atom.data, *args], repl_env)))
+repl_env.set(
+    "swap!", lambda atom, fn, *args: atom.reset(EVAL([fn, atom.data, *args], repl_env))
+)
 
 
 def REP(val: str) -> str:
@@ -130,8 +170,9 @@ def REP(val: str) -> str:
 
 
 REP('(def! load-file (fn* (f) (eval (read-string (str "(do " (slurp f) "\nnil)")))))')
-REP('(def! inc (fn* (x) (+ x 1)))')
-REP('(def! dec (fn* (x) (- x 1)))')
+REP("(def! inc (fn* (x) (+ x 1)))")
+REP("(def! dec (fn* (x) (- x 1)))")
+REP("(def! not (fn* (expr) (if expr false true)))")
 
 
 while True:
