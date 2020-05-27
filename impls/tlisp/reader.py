@@ -78,9 +78,25 @@ def read_form(reader: Reader):
     if token == "(":
         reader.next()
         return read_list(reader)
+
     elif re.match(r"^;.*", token):
         # comment
         return None
+
+    # Reader macro
+    elif token == "'":
+        reader.next()
+        return ["quote", read_form(reader)]
+    elif token == "`":
+        reader.next()
+        return ["quasiquote", read_form(reader)]
+    elif token == "~":
+        reader.next()
+        return ["unquote", read_form(reader)]
+    elif token == "~@":
+        reader.next()
+        return ["splice-unquote", read_form(reader)]
+
     return read_atom(reader)
 
 
