@@ -21,6 +21,10 @@ class Atom:
         return data
 
 
+class MalException(Exception):
+    """ Exception """
+
+
 def nil_Q(val) -> bool:
     return val is None
 

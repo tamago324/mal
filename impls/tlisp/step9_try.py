@@ -140,6 +140,17 @@ def EVAL(ast, env: Env):
         elif ast[0] == "macroexpand":
             return macroexpand(ast[1], env)
 
+        elif ast[0] == "try*":
+            # e,g,: (try* abc (catch* e (prn "e is: " e)))
+            try:
+                # ここで呼び出すのは、try の中で実行するため
+                return EVAL(ast[1], env)
+            except Exception as e:
+                # 新しい env を作り、評価
+                message = e.args[0]
+                env = Env(env, [ast[2][1]], message)
+                return EVAL(ast[2][2], env)
+
         else:
             # apply
             fn, *args = eval_ast(ast, env)
